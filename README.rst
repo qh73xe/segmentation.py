@@ -7,10 +7,10 @@ segmentation.py
 
 1. ディレクトリ単位ではなくコマンド単位で操作:
     - 以下のように音声ファイルとその内容のペアで使用します.
-    - :code:`python -w ./sample/sample.wav -t "きょうはいいてんきです"`
+    - :code:`python segmentation.py -i ./sample/sample.wav -t "きょうはいいてんきだ"`
 2. 表記に関しては平仮名, カタカナ両方を許容:
     - IPU での記述に備え区切り文字 :code:`/` や :code:`_` などは除外するようにしました
-    - :code:`python segmentation.py -i ./sample/sample.wav -t "キョウ/ワ/イイ/テンキ/デス"`
+    - :code:`python segmentation.py -i ./sample/sample.wav -t "キョウ/ワ/イイ/テンキ/ダ"`
 3. その他, 表記ゆれに出来る限り対応:
     - 全角記号等は半角扱いにします
     - その他, unicode の表記揺れをある程度吸収します.
@@ -45,13 +45,21 @@ julius コマンドが使用可能であることを確認してください.
    $ which julius
    /usr/local/bin/julius
 
+また, 種々音声ファイルの取り扱いに ffmpeg を利用しているので,
+これを導入しておく必要があるかもしれません.
+
+
+.. code-block:: bash
+
+   $  sudo dnf install ffmpeg ffmpeg-devel
+
 
 使用方法
 --------------------------
 
 単純にコマンドラインから使用するには以下のようにします::
 
-   $ python -w ./sample/sample.wav -t "きょうわいいてんきだ"
+   $ python segmentation.py -i ./sample/sample.wav -t "きょうわいいてんきだ"
    [
        { "start": 0.0, "end": 0.23, "text": "#" },
        { "start": 0.23, "end": 0.32, "text": "ky" },
@@ -62,11 +70,15 @@ julius コマンドが使用可能であることを確認してください.
 
 出力結果を csv ファイルとして保存するには以下のコマンドを実行してください::
 
-   $ python -w ./sample/sample.wav -t "きょうわいいてんきだ" -o test.csv
+   $ python ./segmentation.py -i ./sample/sample.wav -t "きょうわいいてんきだ" -o sample.csv
+
+同様に出力結果を TextGrid ファイルとして保存することも可能です::
+
+   $ python ./segmentation.py -i ./sample/sample.wav -t "きょうわいいてんきだ" -o sample.TextGrid
 
 出力結果の音素表記を julius のものにするには以下のオプションを与えてください::
 
-   $ python -w ./sample/sample.wav -t "きょうわいいてんきだ" --voca
+   $ python ./segmentation.py -i ./sample/sample.wav -t "きょうわいいてんきだ" --voca
 
 python からは以下のように使用します::
 

@@ -22,7 +22,8 @@ class Julius(object):
     dfa = None
     model = None
     result = None
-    row = None
+    _sound = None
+    _row = None
 
     def __init__(self, wav, text, model=None):
         self.check_cache()
@@ -53,6 +54,7 @@ class Julius(object):
         """音声ファイルを読み込み julius に適した形に変更します"""
         from pydub import AudioSegment
         sound = AudioSegment.from_file(fpath, format)
+        self._sound = sound
         if sound.channels > 1:
             sound = sound.set_channels(1)
         if sound.frame_rate != 16000:
@@ -78,9 +80,9 @@ class Julius(object):
     def run_segmentation(self, csj=True):
         proc = run_julius(self.wav, self.model, self.dfa, self.dic)
         self.result = []
-        self.row = proc.communicate()[0]
+        self._row = proc.communicate()[0]
         try:
-            res = self.row.split("\n")
+            res = self._row.split("\n")
             s_index = res.index("=== begin forced alignment ===")
             e_index = res.index("=== end forced alignment ===")
             segmentations = [
@@ -132,6 +134,46 @@ class Julius(object):
             df.to_csv(output, index=False, encoding="cp932")
         else:
             df.to_csv(output, index=False)
+
+    def to_textgrid(self, output):
+        """認識結果を TextGrid 形式に変換します."""
+        duration = self._sound.duration_seconds
+        templates = [
+            'File type = "ooTextFile"',
+            'Object class = "TextGrid"',
+            '',
+            'xmin = 0 ',
+            'xmax = {} '.format(duration),
+            'tiers? <exists> ',
+            'size = 1 ',
+            'item []: ',
+            '    item [1]:',
+            '        class = "IntervalTier" ',
+            '        name = "SEGMENT" ',
+        ]
+        intervals = []
+        for i, item in enumerate(self.result):
+            intervals.append('        intervals [{}]:'.format(i + 1))
+            if i == 0:
+                intervals.append('            xmin = 0 ')
+            else:
+                intervals.append(
+                    '            xmin = {} '.format(item["start"])
+                )
+            if i == len(self.result):
+                intervals.append('            xmax = {} '.format(duration))
+            else:
+                intervals.append('            xmax = {} '.format(item["end"]))
+            intervals.append('            text = "{}" '.format(item["text"]))
+
+        templates.append('        xmin = 0 ')
+        templates.append('        xmax = {} '.format(duration))
+        templates.append(
+            '        intervals: size = {} '.format(len(self.result))
+        )
+        templates.extend(intervals)
+        with open(output, mode='w') as f:
+            f.write("\n".join(templates))
 
 
 def run_julius(wav, model, dfa, dic):
@@ -647,6 +689,10 @@ if __name__ == "__main__":
             julius.run_segmentation(csj=False)
         julius.run_segmentation()
         if args.output:
-            julius.to_csv(args.output)
+            _, ext = path.splitext(path.basename(args.output))
+            if ".TEXTGRID" == ext.upper():
+                julius.to_textgrid(args.output)
+            else:
+                julius.to_csv(args.output)
         else:
             print(dumps(julius.result, indent=4, ensure_ascii=False))
