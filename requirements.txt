@@ -1,0 +1,2 @@
+-i https://pypi.org/simple
+jaconv==0.2.4

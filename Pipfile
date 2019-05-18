@@ -12,6 +12,7 @@ jedi = "*"
 
 [packages]
 jaconv = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.7"

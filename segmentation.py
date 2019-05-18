@@ -63,7 +63,7 @@ class Julius(object):
             f.write("\n".join(dfa))
         self.dfa = dfa_path
 
-    def run_segmentation(self):
+    def run_segmentation(self, csj=True):
         proc = run_julius(self.wav, self.model, self.dfa, self.dic)
         self.result = []
         self.row = proc.communicate()[0]
@@ -77,10 +77,15 @@ class Julius(object):
                     if x
                 ] for l in res[s_index:e_index] if "[" in l
             ]
-            for items in segmentations:
+            for i, items in enumerate(segmentations):
                 s_time = round(int(items[0]) * 0.01, 2)
                 e_time = round((int(items[1]) + 1) * 0.01, 2)
                 text = items[-1]
+                if csj:
+                    if i != len(segmentations) - 1:
+                        text = voca2csj(
+                            items[-1], next_seg=segmentations[i + 1]
+                        )
                 item = {
                     "start": s_time,
                     "end": e_time,
@@ -89,6 +94,15 @@ class Julius(object):
                 self.result.append(item)
         except Exception:
             pass
+
+    def to_csv(self, output):
+        import os
+        from pandas import DataFrame
+        df = DataFrame(self.result)
+        if os.name == "nt":
+            df.to_csv(output, index=False, encoding="cp932")
+        else:
+            df.to_csv(output, index=False)
 
 
 def run_julius(wav, model, dfa, dic):
@@ -139,14 +153,58 @@ def create_dfa(julius_dic):
     return dfas
 
 
+def voca2csj(seg, next_seg=None):
+    """julius voca 形式を CSJ 分節音ラベルに変換します."""
+    if ":" in seg:
+        return seg.replace(":", "H")
+    if (seg == "q"):
+        return "Q"
+    if (seg == "ts"):
+        return "c"
+    if (seg == "f") & (next_seg == "u"):
+        return "F"
+    if (seg == "f") & (next_seg == "u:"):
+        return "F"
+    if (seg == "k") & ("i" in next_seg):
+        return "kj"
+    if (seg == "g") & ("i" in next_seg):
+        return "gj"
+    if (seg == "sh") & ("i" in next_seg):
+        return "sj"
+    if (seg == "j") & ("i" in next_seg):
+        return "zj"
+    if (seg == "ch") & ("i" in next_seg):
+        return "cj"
+    if (seg == "n") & ("i" in next_seg):
+        return "nj"
+    if (seg == "h") & ("i" in next_seg):
+        return "hj"
+    if (seg == "sh"):
+        return "sy"
+    if (seg == "ch") & ("a" in next_seg):
+        return "cy"
+    if (seg == "ch") & ("u" in next_seg):
+        return "cy"
+    if (seg == "ch") & ("o" in next_seg):
+        return "cy"
+    if (seg == "hy") & ("a" in next_seg):
+        return "Fy"
+    if (seg == "hy") & ("u" in next_seg):
+        return "Fy"
+    if (seg == "hy") & ("o" in next_seg):
+        return "Fy"
+    return seg
+
+
 def yomi2voca(text):
     """平仮名を julius voca 形式に変換します.
 
     >>> yomi2voca("きょうわいいてんきだ")
     'ky o: w a i: t e N k i d a'
+
     """
-    import jaconv
     import re
+    import jaconv
     # 文字列正規化処理
     text = text.strip()
     text = jaconv.normalize(text, "NFKC")
@@ -537,5 +595,27 @@ def yomi2voca(text):
 
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    from argparse import ArgumentParser
+    from json import dumps
+    parser = ArgumentParser(description='音声ファイルに対し自動アラインメントを行います')
+    parser.add_argument('-i', '--input', help='解析対象の wav ファイル')
+    parser.add_argument('-o', '--output', help='認識結果を csv ファイルにして掃き出す')
+    parser.add_argument('-t', '--text', help='音声ファイルの内容')
+    parser.add_argument(
+        '--voca', help='セグメント表記を csj にしない', action='store_true'
+    )
+    parser.add_argument('--test', help='doctest を実行', action='store_true')
+
+    args = parser.parse_args()
+    if args.test:
+        import doctest
+        doctest.testmod(verbose=True)
+    else:
+        julius = Julius(args.input, args.text)
+        if args.voca:
+            julius.run_segmentation(csj=False)
+        julius.run_segmentation()
+        if args.output:
+            julius.to_csv(args.output)
+        else:
+            print(dumps(julius.result, indent=4, ensure_ascii=False))
