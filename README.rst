@@ -26,7 +26,7 @@ segmentation.py
     - これはその内オプションをつけるかもしれません.
 
 Install
---------------------------
+===========================
 
 現状パッケージング等はしていないので，
 ./segmentation.py を直接利用してください．
@@ -45,17 +45,26 @@ julius コマンドが使用可能であることを確認してください.
    $ which julius
    /usr/local/bin/julius
 
+上記コマンドで何もでない場合, julius をインストールする必要があります::
+
+   $ git clone https://github.com/julius-speech/julius.git
+   $ cd julius
+   $ ./configure
+   $ make
+   $ sudo make install
+   $ cd
+   $ which julius
+
 また, 種々音声ファイルの取り扱いに ffmpeg を利用しているので,
 これを導入しておく必要があるかもしれません.
 
-
 .. code-block:: bash
 
-   $  sudo dnf install ffmpeg ffmpeg-devel
+   $ brew install ffmpeg --with-libvorbis --with-sdl2 --with-theora
 
 
 使用方法
---------------------------
+===========================
 
 単純にコマンドラインから使用するには以下のようにします::
 
