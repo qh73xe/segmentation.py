@@ -86,6 +86,8 @@ class Julius(object):
                         text = voca2csj(
                             items[-1], next_seg=segmentations[i + 1]
                         )
+                    else:
+                        text = voca2csj(items[-1])
                 item = {
                     "start": s_time,
                     "end": e_time,
@@ -155,6 +157,8 @@ def create_dfa(julius_dic):
 
 def voca2csj(seg, next_seg=None):
     """julius voca 形式を CSJ 分節音ラベルに変換します."""
+    if "sil" in seg:
+        return "#"
     if ":" in seg:
         return seg.replace(":", "H")
     if (seg == "q"):
