@@ -48,7 +48,7 @@ julius コマンドが使用可能であることを確認してください.
    [
        { "start": 0.0, "end": 0.23, "text": "silB" },
        { "start": 0.23, "end": 0.32, "text": "ky" },
-       { "start": 0.32, "end": 0.56, "text": "o:" },
+       { "start": 0.32, "end": 0.56, "text": "oH" },
        ...
        { "start": 1.58, "end": 2.04, "text": "silE" }
    ]
