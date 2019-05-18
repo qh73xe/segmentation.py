@@ -51,7 +51,7 @@ julius コマンドが使用可能であることを確認してください.
 
 単純にコマンドラインから使用するには以下のようにします::
 
-   $ python -w ./sample/sample.wav -t "きょうはいいてんきです"
+   $ python -w ./sample/sample.wav -t "きょうわいいてんきだ"
    [
        { "start": 0.0, "end": 0.23, "text": "#" },
        { "start": 0.23, "end": 0.32, "text": "ky" },
@@ -62,11 +62,11 @@ julius コマンドが使用可能であることを確認してください.
 
 出力結果を csv ファイルとして保存するには以下のコマンドを実行してください::
 
-   $ python -w ./sample/sample.wav -t "きょうはいいてんきです" -o test.csv
+   $ python -w ./sample/sample.wav -t "きょうわいいてんきだ" -o test.csv
 
 出力結果の音素表記を julius のものにするには以下のオプションを与えてください::
 
-   $ python -w ./sample/sample.wav -t "きょうはいいてんきです" --voca
+   $ python -w ./sample/sample.wav -t "きょうわいいてんきだ" --voca
 
 python からは以下のように使用します::
 
