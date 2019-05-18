@@ -1,2 +1,3 @@
 -i https://pypi.org/simple
 jaconv==0.2.4
+pydub==0.23

@@ -26,8 +26,8 @@ class Julius(object):
 
     def __init__(self, wav, text, model=None):
         self.check_cache()
-        self.wav = wav
         self.bname, _ = path.splitext(path.basename(wav))
+        self.check_sound(wav)
         self.create_text_info(text)
         if model:
             self.model = model
@@ -48,6 +48,18 @@ class Julius(object):
             from os import makedirs
             makedirs(cdir)
         self.cdir = cdir
+
+    def check_sound(self, fpath, format="wav"):
+        """音声ファイルを読み込み julius に適した形に変更します"""
+        from pydub import AudioSegment
+        sound = AudioSegment.from_file(fpath, format)
+        if sound.channels > 1:
+            sound = sound.set_channels(1)
+        if sound.frame_rate != 16000:
+            sound = sound.set_frame_rate(16000)
+        output = path.join(self.cdir, "{}.wav".format(self.bname))
+        sound.export(output, format="wav")
+        self.wav = output
 
     def create_text_info(self, text):
         """julius のセグメンテーションに必要なファイルを生成します"""
@@ -96,6 +108,21 @@ class Julius(object):
                 self.result.append(item)
         except Exception:
             pass
+        self.clean()
+
+    def clean(self):
+        """種々中間ファイルが存在したら削除します"""
+        from os import remove
+        if path.exists(self.dic):
+            remove(self.dic)
+        if path.exists(self.wav):
+            remove(self.wav)
+        if path.exists(self.dfa):
+            remove(self.dfa)
+
+        self.wav = None
+        self.dfa = None
+        self.dic = None
 
     def to_csv(self, output):
         import os
