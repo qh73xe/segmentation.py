@@ -29,15 +29,9 @@ Install
 ===========================
 
 現状パッケージング等はしていないので，
-./segmentation.py を直接利用してください．
+:code:`./segmentation.py` を直接利用してください．
 
-各種依存関係に関しては以下のコマンドから解決可能です
-
-.. code-block:: bash
-
-   $ pip install -r ./requirements.txt
-
-また, このスクリプトは Julius コマンドの薄いラッパーに過ぎないので，
+このスクリプトは Julius コマンドの薄いラッパーに過ぎないので，
 julius コマンドが使用可能であることを確認してください.
 
 .. code-block:: bash
@@ -45,8 +39,15 @@ julius コマンドが使用可能であることを確認してください.
    $ which julius
    /usr/local/bin/julius
 
-上記コマンドで何もでない場合, julius をインストールする必要があります::
+上記コマンドで何もでない場合 :code:`julius` を
+インストールする必要があります.
+以下 Mac を前提に :code:`julius` のインストール方法を記述します
+なお, :code:`Homebrew` の導入が済んでいることを前提とします
 
+.. code-block:: bash
+
+   $ brew install flex
+   $ brew install portaudio
    $ git clone https://github.com/julius-speech/julius.git
    $ cd julius
    $ ./configure
@@ -55,12 +56,12 @@ julius コマンドが使用可能であることを確認してください.
    $ cd
    $ which julius
 
-また, 種々音声ファイルの取り扱いに ffmpeg を利用しているので,
-これを導入しておく必要があるかもしれません.
+各種依存関係に関しては以下のコマンドから解決可能です
 
 .. code-block:: bash
 
-   $ brew install ffmpeg --with-libvorbis --with-sdl2 --with-theora
+   $ brew install ffmpeg
+   $ pip install -r ./requirements.txt
 
 
 使用方法
