@@ -1,5 +1,15 @@
 # -*- coding: utf-8 -*
-"""Julius を使用した自動アノテーションコマンドを発行します"""
+"""Julius を使用した自動アノテーションコマンドを発行します
+
+Example:
+    単純にコマンドラインから使用するには以下のようにします::
+
+        $ python segmentation.py -i ./sample/sample.wav -t "きょうわいいてんきだ"
+
+    同様に出力結果を TextGrid ファイルとして保存することも可能です::
+        $ python ./segmentation.py -i ./sample/sample.wav -t "きょうわいいてんきだ" -o sample.TextGrid
+
+"""
 from os import path
 
 
@@ -137,43 +147,7 @@ class Julius(object):
 
     def to_textgrid(self, output):
         """認識結果を TextGrid 形式に変換します."""
-        duration = self._sound.duration_seconds
-        templates = [
-            'File type = "ooTextFile"',
-            'Object class = "TextGrid"',
-            '',
-            'xmin = 0 ',
-            'xmax = {} '.format(duration),
-            'tiers? <exists> ',
-            'size = 1 ',
-            'item []: ',
-            '    item [1]:',
-            '        class = "IntervalTier" ',
-            '        name = "SEGMENT" ',
-        ]
-        intervals = []
-        for i, item in enumerate(self.result):
-            intervals.append('        intervals [{}]:'.format(i + 1))
-            if i == 0:
-                intervals.append('            xmin = 0 ')
-            else:
-                intervals.append(
-                    '            xmin = {} '.format(item["start"])
-                )
-            if i == len(self.result):
-                intervals.append('            xmax = {} '.format(duration))
-            else:
-                intervals.append('            xmax = {} '.format(item["end"]))
-            intervals.append('            text = "{}" '.format(item["text"]))
-
-        templates.append('        xmin = 0 ')
-        templates.append('        xmax = {} '.format(duration))
-        templates.append(
-            '        intervals: size = {} '.format(len(self.result))
-        )
-        templates.extend(intervals)
-        with open(output, mode='w') as f:
-            f.write("\n".join(templates))
+        create_textgrid(self._sound, {"SEGMENT": self.result}, output)
 
 
 def run_julius(wav, model, dfa, dic):
@@ -665,6 +639,55 @@ def yomi2voca(text):
     text = re.sub(":+", ":", text)
     text = re.sub(r"\s+", " ", text)
     return text.strip()
+
+
+def create_tier_text(name, i, duration, vals):
+    templates = [
+       '    item [{}]:'.format(i),
+       '        class = "IntervalTier" ',
+       '        name = "{}" '.format(name),
+    ]
+    intervals = []
+    for i, item in enumerate(vals):
+        intervals.append('        intervals [{}]:'.format(i + 1))
+        if i == 0:
+            intervals.append('            xmin = 0 ')
+        else:
+            intervals.append(
+                '            xmin = {} '.format(item["start"])
+            )
+        if i == len(vals):
+            intervals.append('            xmax = {} '.format(duration))
+        else:
+            intervals.append('            xmax = {} '.format(item["end"]))
+        intervals.append('            text = "{}" '.format(item["text"]))
+
+    templates.append('        xmin = 0 ')
+    templates.append('        xmax = {} '.format(duration))
+    templates.append(
+        '        intervals: size = {} '.format(len(vals))
+    )
+    templates.extend(intervals)
+    return templates
+
+def create_textgrid(sound, tiers, output):
+    """認識結果を TextGrid 形式に変換します."""
+    duration = sound.duration_seconds
+    templates = [
+        'File type = "ooTextFile"',
+        'Object class = "TextGrid"',
+        '',
+        'xmin = 0 ',
+        'xmax = {} '.format(duration),
+        'tiers? <exists> ',
+        'size = {} '.format(len(tiers)),
+        'item []: ',
+    ]
+    for i, (key, vals) in enumerate(tiers.items()):
+        intervals = create_tier_text(key, i, duration, vals)
+        templates.extend(intervals)
+    with open(output, mode='w') as f:
+        f.write("\n".join(templates))
 
 
 if __name__ == "__main__":

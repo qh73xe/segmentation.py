@@ -6,7 +6,7 @@ xmax = 2.0625
 tiers? <exists> 
 size = 1 
 item []: 
-    item [1]:
+    item [0]:
         class = "IntervalTier" 
         name = "SEGMENT" 
         xmin = 0 
